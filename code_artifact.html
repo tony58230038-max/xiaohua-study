@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>小花學霸養成計畫 🌸 國小六年級互動複習基地</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts & Phosphor Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'sans-serif'],
+            display: ['"Fredoka"', '"Noto Sans TC"', 'sans-serif']
+          },
+          colors: {
+            brand: {
+              50: '#fff1f2',
+              100: '#ffe4e6',
+              200: '#fecdd3',
+              400: '#fb7185',
+              500: '#f43f5e',
+              600: '#e11d48',
+              700: '#be123c',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Safe Area & Compact Reset */
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+    }
+    html {
+      font-size: 18px; /* Default larger base font */
+      transition: font-size 0.2s ease;
+    }
+    html.font-normal {
+      font-size: 16px;
+    }
+    html.font-large {
+      font-size: 19px;
+    }
+    html.font-xlarge {
+      font-size: 22px;
+    }
+    body {
+      padding-top: var(--sat);
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Touch Optimizations */
+    button, .touch-card {
+      touch-action: manipulation;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+
+    /* Confetti Canvas */
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans min-h-screen flex flex-col select-none text-base">
+  <!-- Confetti Canvas for Victory -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Navigation Bar (Ultra-Compact for Mobile & Tablet) -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5 cursor-pointer" onclick="app.navigate('home')">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-brand-500 to-rose-400 flex items-center justify-center text-white shadow-sm text-xl sm:text-2xl font-bold font-display shrink-0">
+          🌸
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 leading-tight">
+              小花學霸養成計畫
+            </h1>
+            <span class="text-xs bg-brand-100 text-brand-600 font-bold px-1.5 py-0.5 rounded-md">六衝刺</span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-400 font-medium leading-none mt-1">觀念真懂才敢大聲！拒絕死背</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-1.5 sm:space-x-2">
+        <!-- Font Size Switcher -->
+        <button id="fontToggleBtn" onclick="app.cycleFontSize()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 flex items-center gap-1 transition text-xs sm:text-sm font-black border border-indigo-200 shadow-xs" title="切換字體大小">
+          <i class="ph-bold ph-text-t text-base"></i>
+          <span id="fontScaleLabel">字體：大</span>
+        </button>
+
+        <!-- Sound Toggle -->
+        <button id="soundBtn" onclick="app.toggleSound()" class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center gap-1 transition text-xs sm:text-sm font-semibold" title="音效切換">
+          <i id="soundIcon" class="ph-fill ph-speaker-high text-base text-emerald-600"></i>
+          <span class="hidden lg:inline" id="soundLabel">音效：開</span>
+        </button>
+
+        <!-- Records & Wrong Questions -->
+        <button onclick="app.openHistoryModal()" class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center gap-1 transition text-xs sm:text-sm font-bold border border-amber-200">
+          <i class="ph-bold ph-chart-line-up text-base"></i>
+          <span class="hidden sm:inline">學習紀錄</span>
+        </button>
+
+        <!-- Parent / Import Manager -->
+        <button onclick="app.openAdminModal()" class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white flex items-center gap-1 transition text-xs sm:text-sm font-bold shadow-xs" title="家長擴充管理">
+          <i class="ph-bold ph-gear-six text-base"></i>
+          <span class="hidden sm:inline">家長專區</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-3 py-2.5 sm:px-6 sm:py-4">
+    
+    <!-- VIEW 1: HOME (Subject Catalog & Progress Dashboard) -->
+    <section id="view-home" class="space-y-3.5 sm:space-y-5">
+      
+      <!-- Little Hua's Compact Status Banner -->
+      <div class="bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-md relative overflow-hidden">
+        <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div class="space-y-1">
+            <div class="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-md text-xs sm:text-sm font-bold text-rose-100">
+              <i class="ph-fill ph-sparkle text-amber-300"></i> 小花今日戰鬥狀態
+            </div>
+            <h2 class="text-xl sm:text-3xl font-black tracking-tight" id="heroGreeting">
+              哈囉小花！今天準備好痛擊考題了嗎？
+            </h2>
+            <p class="text-sm sm:text-base text-rose-100 font-medium leading-relaxed" id="heroSubtext">
+              「想要不被考卷毒舌，最好的方法就是先把題目狠狠按在地上摩擦！」
+            </p>
+          </div>
+
+          <!-- Quick Stat Badges -->
+          <div class="grid grid-cols-3 gap-2 w-full sm:w-auto shrink-0 bg-white/15 backdrop-blur-md p-2.5 sm:p-3.5 rounded-xl border border-white/20">
+            <div class="text-center px-2">
+              <div class="text-xs text-rose-200 font-bold">總測驗</div>
+              <div class="text-xl sm:text-2xl font-black font-display mt-0.5" id="statTotalExams">0</div>
+            </div>
+            <div class="text-center px-2 border-x border-white/20">
+              <div class="text-xs text-rose-200 font-bold">平均分</div>
+              <div class="text-xl sm:text-2xl font-black font-display mt-0.5" id="statAvgScore">--</div>
+            </div>
+            <div class="text-center px-2">
+              <div class="text-xs text-rose-200 font-bold">錯題數</div>
+              <div class="text-xl sm:text-2xl font-black font-display mt-0.5 text-amber-300" id="statMistakeCount">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject Filter & Actions Bar -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        <!-- Subject Pills -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0" id="subjectFilters">
+          <button onclick="app.setSubjectFilter('all')" class="filter-btn active shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-1.5 bg-slate-800 text-white shadow-xs">
+            <i class="ph-bold ph-squares-four text-base"></i> 全部
+          </button>
+          <button onclick="app.setSubjectFilter('國語')" class="filter-btn shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-1.5 bg-white text-slate-600 hover:bg-slate-100 border border-slate-200">
+            <i class="ph-bold ph-book-open text-amber-600 text-base"></i> 國語
+          </button>
+          <button onclick="app.setSubjectFilter('社會')" class="filter-btn shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-1.5 bg-white text-slate-600 hover:bg-slate-100 border border-slate-200">
+            <i class="ph-bold ph-globe-hemisphere-east text-rose-500 text-base"></i> 社會
+          </button>
+          <button onclick="app.setSubjectFilter('自然科學')" class="filter-btn shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-1.5 bg-white text-slate-600 hover:bg-slate-100 border border-slate-200">
+            <i class="ph-bold ph-flask text-emerald-500 text-base"></i> 自然
+          </button>
+        </div>
+
+        <!-- Right Quick Actions -->
+        <div>
+          <button onclick="app.openMistakesPractice()" id="practiceMistakesBtn" class="w-full sm:w-auto px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-sm rounded-xl border border-rose-200 flex items-center justify-center gap-1.5 transition disabled:opacity-40 disabled:pointer-events-none shadow-xs">
+            <i class="ph-fill ph-fire text-rose-500 text-base"></i> 錯題特訓 (<span id="mistakeBadgeCount">0</span>)
+          </button>
+        </div>
+      </div>
+
+      <!-- Units Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" id="unitsContainer">
+        <!-- Injected via JavaScript -->
+      </div>
+    </section>
+
+    <!-- VIEW 2: UNIT READING HUB (Study Guide & Pitfall Alerts) -->
+    <section id="view-reading" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <button onclick="app.navigate('home')" class="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-black text-sm py-2 px-3 rounded-xl hover:bg-white transition border border-slate-200/60 bg-slate-50">
+          <i class="ph-bold ph-arrow-left text-base"></i> 返回單元清單
+        </button>
+        <div class="flex items-center gap-2">
+          <span id="readingSubjectTag" class="px-2.5 py-1 rounded-lg text-xs font-black uppercase bg-rose-100 text-rose-700">國語</span>
+          <span id="readingUnitIdTag" class="text-xs font-bold text-slate-400">單元編號</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 sm:p-7 border border-slate-200 shadow-xs space-y-5">
+        <div class="border-b border-slate-100 pb-4">
+          <h2 class="text-xl sm:text-2xl font-black text-slate-800 leading-snug" id="readingUnitTitle">
+            單元名稱加載中...
+          </h2>
+          <p class="text-slate-500 text-sm mt-1" id="readingUnitSubtitle">
+            考前重點極速吸收，字體放大更清楚！
+          </p>
+        </div>
+
+        <div class="prose prose-slate max-w-none text-slate-700 text-base sm:text-lg leading-relaxed space-y-4" id="readingContentBody">
+          <!-- Injected via JavaScript -->
+        </div>
+
+        <div class="pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="text-sm text-slate-500 flex items-center gap-1.5 font-bold">
+            <i class="ph-fill ph-lightbulb text-amber-500 text-lg"></i>
+            觀念讀懂了就點擊開始測驗！
+          </div>
+          <button id="startExamFromReadingBtn" onclick="app.startExamFromReading()" class="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-brand-500 to-rose-600 hover:from-brand-600 hover:to-rose-700 text-white rounded-xl font-black text-base shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition active:scale-95">
+            <span>開始挑戰 10 題測驗！</span>
+            <i class="ph-bold ph-arrow-right text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: EXAM ROOM (Interactive Tablet Testing Interface) -->
+    <section id="view-exam" class="hidden space-y-4">
+      <!-- Quiz Header -->
+      <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-xs flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <button onclick="app.confirmExitExam()" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" title="離開">
+            <i class="ph-bold ph-x text-xl"></i>
+          </button>
+          <div>
+            <h3 class="font-black text-slate-800 text-base sm:text-lg line-clamp-1" id="examUnitTitle">單元測驗</h3>
+            <div class="flex items-center gap-1.5 text-xs text-slate-400 font-bold">
+              <span id="examTypeBadge" class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded">單元正考</span>
+              <span>•</span>
+              <span>10 道觀念題</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Counter & Progress Bar -->
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <div class="text-xs text-slate-400 font-bold">答題進度</div>
+            <div class="font-display font-black text-brand-600 text-base sm:text-lg">
+              <span id="currentQuestionNum">1</span><span class="text-slate-300">/</span><span id="totalQuestionsNum">10</span>
+            </div>
+          </div>
+          <div class="w-20 sm:w-28 h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+            <div id="examProgressBar" class="h-full bg-gradient-to-r from-brand-500 to-amber-500 rounded-full transition-all duration-300 w-[10%]"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Question Card -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-slate-200 shadow-xs space-y-4 min-h-[420px] flex flex-col justify-between" id="questionCard">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs sm:text-sm font-black" id="qTypeBadge">
+              是非題
+            </div>
+            <span class="text-xs sm:text-sm font-bold text-slate-400" id="qPointsBadge">每題 10 分</span>
+          </div>
+
+          <h2 class="text-lg sm:text-2xl font-black text-slate-800 leading-relaxed tracking-tight" id="qStem">
+            題目載入中...
+          </h2>
+          
+          <div id="qPromptHint" class="text-sm text-slate-400 font-medium mt-1 hidden"></div>
+        </div>
+
+        <!-- Dynamic Answer Area -->
+        <div class="py-3 my-auto" id="qAnswerContainer">
+          <!-- Injected via JavaScript -->
+        </div>
+
+        <!-- Exam Bottom Navigation Bar -->
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+          <button id="prevQBtn" onclick="app.prevQuestion()" class="px-4 py-2.5 rounded-xl font-bold text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1.5">
+            <i class="ph-bold ph-caret-left text-base"></i> 上一題
+          </button>
+
+          <!-- Middle indicator dots -->
+          <div class="hidden sm:flex items-center gap-1.5" id="questionDotsNav"></div>
+
+          <div class="flex items-center gap-2">
+            <button id="nextQBtn" onclick="app.nextQuestion()" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-slate-800 hover:bg-slate-900 transition flex items-center gap-1.5 shadow-xs">
+              下一題 <i class="ph-bold ph-caret-right text-base"></i>
+            </button>
+            <button id="submitExamBtn" onclick="app.submitExamModal()" class="hidden px-6 py-2.5 rounded-xl font-black text-sm sm:text-base text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition flex items-center gap-2 shadow-md shadow-emerald-500/20 active:scale-95">
+              <i class="ph-bold ph-check-circle text-lg"></i> 完成交卷！
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: SCORE & WITTY FEEDBACK -->
+    <section id="view-result" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-xs text-center relative overflow-hidden" id="resultHeaderCard">
+        <div class="relative z-10 max-w-xl mx-auto space-y-3">
+          <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-black" id="resultGradePill">
+            測驗結算
+          </div>
+
+          <div class="font-display font-black text-5xl sm:text-7xl tracking-tight text-slate-900 flex items-center justify-center gap-1">
+            <span id="finalScoreVal">100</span>
+            <span class="text-xl sm:text-2xl font-sans font-bold text-slate-400">分</span>
+          </div>
+
+          <!-- Roast Comment -->
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-left relative">
+            <div class="font-black text-slate-800 text-xs sm:text-sm mb-1 flex items-center gap-1.5">
+              <span>🌸 系統對「小花」的犀利銳評：</span>
+            </div>
+            <p class="text-slate-600 text-xs sm:text-sm font-medium leading-relaxed italic" id="roastComment">
+              評語載入中...
+            </p>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="pt-2 flex flex-wrap items-center justify-center gap-2">
+            <button onclick="app.retakeCurrentUnit()" class="px-4 py-2 rounded-xl font-black text-xs bg-slate-800 text-white hover:bg-slate-900 transition flex items-center gap-1 shadow-xs">
+              <i class="ph-bold ph-arrows-counter-clockwise"></i> 不服氣？再測一次
+            </button>
+            <button onclick="app.navigate('reading')" class="px-4 py-2 rounded-xl font-bold text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 transition border border-rose-200 flex items-center gap-1">
+              <i class="ph-bold ph-book-open"></i> 重看重點
+            </button>
+            <button onclick="app.navigate('home')" class="px-4 py-2 rounded-xl font-bold text-xs bg-white text-slate-600 hover:bg-slate-100 transition border border-slate-200 flex items-center gap-1">
+              <i class="ph-bold ph-house"></i> 回首頁
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Breakdown & Mistake Explanations -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-slate-800">作答檢核與防坑解析</h3>
+            <p class="text-[11px] text-slate-400">綠色代表通關，紅色代表被出題老師暗算！</p>
+          </div>
+          <div class="text-xs font-bold text-slate-500">
+            答對 <span class="text-emerald-600 font-black text-sm" id="correctCountNum">0</span> / 10 題
+          </div>
+        </div>
+
+        <div class="space-y-3" id="detailedResultList">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: STUDY HISTORY & MISTAKES NOTEBOOK -->
+  <div id="historyModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold">
+            <i class="ph-bold ph-notebook"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-800">小花的讀書歷程與錯題本</h3>
+            <p class="text-[10px] text-slate-400">所有作答軌跡都在這裡！</p>
+          </div>
+        </div>
+        <button onclick="app.closeHistoryModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="flex border-b border-slate-100 bg-slate-50/70 px-4">
+        <button onclick="app.switchHistoryTab('timeline')" id="tabTimelineBtn" class="py-2.5 px-3 font-bold text-xs text-brand-600 border-b-2 border-brand-500">
+          作答時間軸 (<span id="historyTimelineCount">0</span>)
+        </button>
+        <button onclick="app.switchHistoryTab('mistakes')" id="tabMistakesBtn" class="py-2.5 px-3 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent">
+          累積易錯題 (<span id="historyMistakesCount">0</span>)
+        </button>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-3 flex-1 text-xs" id="historyModalBody">
+        <!-- Content injected dynamically -->
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <span>資料保存在本台平板/手機中</span>
+        <button onclick="app.clearHistoryData()" class="text-rose-500 hover:text-rose-700 font-bold">清空紀錄</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PARENT / ADMIN UNIT IMPORT -->
+  <div id="adminModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-lg font-bold">
+            <i class="ph-bold ph-wrench"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-800">家長管理專區：擴充新單元</h3>
+            <p class="text-[10px] text-slate-400">拍照讓 AI 產出 JSON 後，直接貼入即可！</p>
+          </div>
+        </div>
+        <button onclick="app.closeAdminModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
+          <i class="ph-bold ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-800 space-y-1">
+          <div class="font-bold flex items-center gap-1"><i class="ph-fill ph-info"></i> 操作說明：</div>
+          <p>將 AI 產出的標準單元代碼整段貼在下方框框，點擊「儲存新單元」，小花的題庫就會立即更新。</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-black text-slate-600 mb-1">單元 JSON 代碼貼上處：</label>
+          <textarea id="importJsonTextarea" rows="8" class="w-full p-2.5 font-mono text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder='{"id": "...", "subject": "國語", "title": "...", "summary": [...], "questions": [...]}'></textarea>
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="app.fillSampleJson()" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">填入範本結構參考</button>
+          <span class="text-slate-300">|</span>
+          <button onclick="app.resetToDefaults()" class="text-xs font-bold text-rose-500 hover:text-rose-700 underline">還原為預設5個單元</button>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+        <button onclick="app.closeAdminModal()" class="px-4 py-2 rounded-xl font-bold text-xs text-slate-600 hover:bg-slate-200 transition">取消</button>
+        <button onclick="app.saveImportedUnit()" class="px-5 py-2 rounded-xl font-black text-xs bg-brand-500 hover:bg-brand-600 text-white transition shadow-xs">儲存並建立單元</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRM ACTION -->
+  <div id="confirmModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 space-y-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl font-bold mx-auto">
+        <i class="ph-bold ph-warning-circle"></i>
+      </div>
+      <div class="text-center space-y-1">
+        <h4 class="text-base font-black text-slate-800" id="confirmTitle">確認交卷？</h4>
+        <p class="text-xs text-slate-500" id="confirmMessage">還有題目尚未作答喔！</p>
+      </div>
+      <div class="flex items-center gap-2 pt-1">
+        <button id="confirmCancelBtn" class="flex-1 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition">繼續答題</button>
+        <button id="confirmOkBtn" class="flex-1 py-2.5 rounded-xl font-black text-xs bg-brand-500 hover:bg-brand-600 text-white transition shadow-xs">確定交卷</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC SCRIPT -->
+  <script>
+    /* =========================================================================
+     * 1. PRELOADED KNOWLEDGE BASE (All 5 Units: Chinese, Social, 3x Science)
+     * ========================================================================= */
+    const DEFAULT_UNITS = [
+      {
+        id: "chi_u1",
+        subject: "國語",
+        title: "六上第一課：字形字音義、成語與修辭（記敘文）",
+        subtitle: "壓軸讀音、美不勝收、屈指可數、潛移默化、扭轉乾坤與誇飾修辭",
+        badgeColor: "amber",
+        summary: `
+          <div class="space-y-4">
+            <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs">
+              <h4 class="font-black text-amber-800 text-sm flex items-center gap-1.5 mb-2">
+                <i class="ph-fill ph-text-aa"></i> 核心一：常考多音字與部首陷阱
+              </h4>
+              <ul class="list-disc pl-4 space-y-1 text-slate-700">
+                <li><strong>壓「軸」：</strong> 讀音為 <mark class="bg-amber-200 font-bold px-1 rounded">ㄓㄡˊ</mark>（比喻最精彩引人注目的節目），不可唸四聲！</li>
+                <li><strong>美不「勝」收：</strong> 讀 <mark class="bg-amber-200 font-bold px-1 rounded">ㄕㄥ</mark>（平聲，禁得起之意）；打贏比賽的「獲勝」才讀四聲 ㄕㄥˋ。</li>
+                <li><strong>部首辨別：</strong> 拱手讓人（手部）、一哄而散（口部）、烘乾（火部）、抑揚頓挫（手部）、人仰馬翻（人部）。</li>
+                <li><strong>生字辨異：</strong> 相「距」（足部）vs 抗「拒」（手部）；「悔」恨（心部）vs 青「梅」（木部）vs 「誨」人不倦（言部）。</li>
+              </ul>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs">
+              <h4 class="font-black text-rose-800 text-sm flex items-center gap-1.5 mb-2">
+                <i class="ph-fill ph-feather"></i> 核心二：三大必考成語與修辭句型
+              </h4>
+              <ul class="list-disc pl-4 space-y-1 text-slate-700">
+                <li><strong>「屈」指可數：</strong> 彎曲手指計算，勿寫成彎曲的「曲」！</li>
+                <li><strong>潛移「默」化：</strong> 不知不覺受到影響感染，勿寫成莫非的「莫」！</li>
+                <li><strong>「扭」轉乾坤：</strong> 比喻逆轉改變局勢，勿寫成永恆的「恆」！</li>
+                <li><strong>誇飾法修辭：</strong> 「心臟幾乎要跳出來了！」超越客觀事實，強化情緒感受。</li>
+                <li><strong>條件複句：</strong> 「只要……一定……」具備條件就會達成特定結果。</li>
+              </ul>
+            </div>
+          </div>
+        `,
+        questions: [
+          {
+            id: 1,
+            type: "tf",
+            stem: "「這場晚會最後由街舞社帶來『壓軸』演出」，句中的「軸」字讀音為 ㄓㄡˊ，意思是比喻最精彩、最引人注目的節目。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "答對了！小花請記住，「壓軸」的軸一定要唸二聲 ㄓㄡˊ，唸成四聲就太外行啦！"
+          },
+          {
+            id: 2,
+            type: "tf",
+            stem: "「這座國家公園的風景美不勝收」，句中的「勝」字讀音應為 ㄕㄥˋ（四聲）。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "抓到陷阱！美不「勝」收、不可「勝」數都是一聲 ㄕㄥ！只有打勝仗的獲勝才唸四聲！"
+          },
+          {
+            id: 3,
+            type: "tf",
+            stem: "形容某樣東西數量非常稀少、用手指就能數得出來時，正確成語寫法是「曲指可數」。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "大錯特錯！是「屈指可數」，屈是彎曲手指的意思，不是九曲橋的曲！"
+          },
+          {
+            id: 4,
+            type: "tf",
+            stem: "「司儀叫到我的名字時，我緊張得心臟幾乎要跳出來了！」這句話運用了「誇飾」修辭法。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "沒錯！心臟真的跳出來就要叫救護車了！超過事實描述就是標準的誇飾！"
+          },
+          {
+            id: 5,
+            type: "choice",
+            stem: "下列文句「 」中的字詞與注音，何者配對【完全正確】？",
+            options: [
+              "老師「誨」人不倦：ㄏㄨㄟˇ",
+              "雙方心存「芥」蒂：ㄐㄧㄝˋ",
+              "聽完笑話大家一「哄」而散：ㄏㄨㄥ",
+              "演講聲音「抑」揚頓挫：ㄧㄤˇ"
+            ],
+            answer: 1,
+            roastNote: "好眼力！芥蒂是ㄐㄧㄝˋ；誨人不倦是ㄏㄨㄟˋ；一哄而散是ㄏㄨㄥˋ；抑揚頓挫是手部ㄧˋ！"
+          },
+          {
+            id: 6,
+            type: "choice",
+            stem: "下列成語中的錯別字，何者訂正【錯誤】？",
+            options: [
+              "「曲」指可數 → 應改為「屈」",
+              "潛移「莫」化 → 應改為「默」",
+              "「恆」轉乾坤 → 應改為「扭」",
+              "眾星「哄」月 → 應改為「烘」"
+            ],
+            answer: 3,
+            roastNote: "答對了！眾星拱月是手部的「拱」（拱手圍繞），改成烘烤的烘難道是要圍著月亮烤肉嗎？"
+          },
+          {
+            id: 7,
+            type: "choice",
+            stem: "「因為受到父母言行不知不覺的影響，他的讀書習慣也慢慢變好了。」這句話最適合用哪個成語？",
+            options: [
+              "扭轉乾坤",
+              "屈指可數",
+              "潛移默化",
+              "拱手讓人"
+            ],
+            answer: 2,
+            roastNote: "選「潛移默化」就對了！不知不覺受到良好熏陶，學霸氣質就是這樣默默養成的！"
+          },
+          {
+            id: 8,
+            type: "choice",
+            stem: "課本句型「只要大家團結合作，我們一定能突破難關。」在語法結構上屬於哪一種複句？",
+            options: [
+              "遞進複句",
+              "條件複句",
+              "轉折複句",
+              "因果複句"
+            ],
+            answer: 1,
+            roastNote: "「只要……一定……」是具備前提產生結果的條件複句；若是「不但……甚至……」才是遞進喔！"
+          },
+          {
+            id: 9,
+            type: "choice",
+            stem: "【字形大考驗】大明寫道：「這次比賽中華隊因為失常，把冠軍寶座【　】讓人，隊員在台上整個人發【　】。」空格應依序填入：",
+            options: [
+              "拱手 / 愣",
+              "哄手 / 愣",
+              "拱手 / 楞",
+              "烘手 / 愣"
+            ],
+            answer: 0,
+            roastNote: "拱手讓人（手部拱）＋發愣（心部愣）！寫成烘手的話是在冬天烤手取暖啦！"
+          },
+          {
+            id: 10,
+            type: "choice",
+            stem: "【情境理解】大隊接力政彬被換棒次，他雖心裡難過，最後依然放下芥蒂為團體努力。根據課本，下列敘述何者最適當？",
+            options: [
+              "政彬因不合理待遇感到難過的心情，課本詞語稱為「委屈」",
+              "政彬心裡如果對同學有嫌隙與不快，可以用「心存偏心」形容",
+              "政彬最後放棄個人情緒為團體努力，這種行為叫做「拱手讓人」",
+              "接力賽最後一棒同學逆轉奪冠的精彩表現，不能稱之為「壓軸」"
+            ],
+            answer: 0,
+            roastNote: "遭受不公平待遇感到難過就是「委屈」！心裡有嫌隙叫心存「芥蒂」，拱手讓人可不能亂用！"
+          }
+        ]
+      },
+      {
+        id: "soc_u1_u2",
+        subject: "社會",
+        title: "單元一＆二：消費選擇、理財規劃與經濟轉型",
+        subtitle: "1950消保專線、3~6個月預備金、土地改革、加工出口區與新竹科學園區",
+        badgeColor: "rose",
+        summary: `
+          <div class="space-y-4">
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs">
+              <h4 class="font-black text-rose-800 text-sm flex items-center gap-1.5 mb-1.5">
+                <i class="ph-fill ph-crosshair"></i> 核心一：聰明理財與綠色消費
+              </h4>
+              <ul class="list-disc pl-4 space-y-1 text-slate-700">
+                <li><strong>1950 vs 165：</strong> 全國消保專線是 <mark class="bg-amber-200 font-bold px-1 rounded">1950</mark>（依舊為你）；反詐騙諮詢是 <mark class="bg-amber-200 font-bold px-1 rounded">165</mark>！</li>
+                <li><strong>理財規劃：</strong> 先扣除必要開銷並預留 <strong>3 至 6 個月緊急預備金</strong>，切勿全部孤注一擲投資。</li>
+              </ul>
+            </div>
+            <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs">
+              <h4 class="font-black text-amber-800 text-sm flex items-center gap-1.5 mb-1.5">
+                <i class="ph-fill ph-trend-up"></i> 核心二：臺灣經濟四大轉型
+              </h4>
+              <p class="text-slate-700">① 三七五減租保障佃農 → ② 民國50年代高雄加工出口區（民生輕工業代工） → ③ 民國60年代十大建設（抗能源危機） → ④ 民國69年竹科（結合清華、交大發展晶圓半導體）。</p>
+            </div>
+          </div>
+        `,
+        questions: [
+          {
+            id: 1,
+            type: "tf",
+            stem: "在網路上購買商品後如果發生消費糾紛，賣家拒絕退換貨，我們可以撥打「165」全國消費者服務專線尋求諮詢與申訴。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "165是反詐騙！1950才是『依舊為你』消保專線，這題上鉤妳就是給詐騙集團送溫暖啦！"
+          },
+          {
+            id: 2,
+            type: "tf",
+            stem: "進行家庭理財規劃時，應該先把所有剩下的錢拿去投資股票以賺取最高利潤，若有突發狀況再向親友借錢即可。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "全部身家衝進股市？這不是理財，這是投胎級冒險！必須先留3~6個月緊急預備金好嗎！"
+          },
+          {
+            id: 3,
+            type: "tf",
+            stem: "民國38年推動的「三七五減租」政策，規定農地租金最高不得超過農產品總產量的37.5%，有效減輕了農民負擔。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "很好，三七五減租名字就是這個數字，連這都選錯課本真的要拿去當柴燒了。"
+          },
+          {
+            id: 4,
+            type: "tf",
+            stem: "民國50年代在高雄港設立「加工出口區」，主要是生產高科技的晶圓與半導體晶片，讓臺灣成為世界的科技島。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "時空旅人是妳？民國50年代哪來的晶圓！那時候主要是做成衣、雨傘跟罐頭好不好！"
+          },
+          {
+            id: 5,
+            type: "choice",
+            stem: "小花想買一件外套，發現同款外套在不同店家價格差異很大。請問下列哪一個是影響理性消費者選擇的最主要因素？",
+            options: [
+              "只要價格最便宜就一定要買，不管材質如何",
+              "考量自身預算、商品品質以及個人實際需求",
+              "為了追求班上流行，不管實不實用都要買",
+              "只要是進口高價品牌，品質一定就是最好"
+            ],
+            answer: 1,
+            roastNote: "理性消費！不是看誰牌子大，更不是看誰便宜就亂買堆在房間生灰塵！"
+          },
+          {
+            id: 6,
+            type: "choice",
+            stem: "民國40～50年代美國對臺灣提供各項經濟與物資援助（美援），對當時臺灣社會飲食文化產生了什麼重大影響？",
+            options: [
+              "促成臺灣大量普及使用電子支付與信用卡",
+              "提供了麵粉與奶粉等物資，改變了臺灣人的麵食與飲奶習慣",
+              "建立了臺灣第一條高速公路「中山高速公路」",
+              "讓臺灣傳統農業人口在兩年內完全消失"
+            ],
+            answer: 1,
+            roastNote: "美援麵粉袋做內褲的故事聽過沒？麵粉跟奶粉讓包子饅頭牛肉麵大流行啦！"
+          },
+          {
+            id: 7,
+            type: "choice",
+            stem: "民國60年代國際爆發「能源危機」，石油價格狂飆。政府為了穩定供應能源、改善交通並提高國家競爭力，推動了哪項重大施政？",
+            options: [
+              "耕者有其田",
+              "設立新竹科學園區",
+              "推動十大建設",
+              "推行TPASS行政院通勤月票"
+            ],
+            answer: 2,
+            roastNote: "十大建設！那時候連智慧型手機都沒有，哪來的TPASS悠遊卡啦，笑死！"
+          },
+          {
+            id: 8,
+            type: "choice",
+            stem: "關於「理財風險與觀念」，下列敘述何者最正確？",
+            options: [
+              "銀行儲蓄完全沒有利息，但投資風險最高",
+              "購買股票雖然獲利可能較高，但虧損的風險也相對較高",
+              "只要聽信網路投資神童的內部明牌，就一定穩賺不賠",
+              "國小學生年紀太小，完全無法進行任何形式的自我投資"
+            ],
+            answer: 1,
+            roastNote: "天下沒有白吃的午餐，高獲利伴隨高風險，聽信明牌的人現在都在洗碗打工呢！"
+          },
+          {
+            id: 9,
+            type: "choice",
+            stem: "【情境題：快時尚與綠色消費】面對平價衣服過度消費造成的環境負擔，下列哪種做法最符合綠色消費精神？",
+            options: [
+              "只要退流行就把衣服直接丟進一般垃圾焚化",
+              "每季大特賣都買十幾件新衣服拍照打卡",
+              "延長衣物壽命、二手上架或改造成環保提袋再利用",
+              "買衣服只看外觀顏色，不看任何環保標章"
+            ],
+            answer: 2,
+            roastNote: "舊物改造與二手流轉才是綠色消費王道！穿一次就丟那是對地球施暴！"
+          },
+          {
+            id: 10,
+            type: "choice",
+            stem: "【產業常識：新竹科學園區】竹科在民國69年設立，當時結合了鄰近哪兩所頂尖大學以培育關鍵理工人才？",
+            options: [
+              "清華大學 與 陽明交通大學",
+              "臺灣大學 與 成功大學",
+              "政治大學 與 師範大學",
+              "台北大學 與 東吳大學"
+            ],
+            answer: 0,
+            roastNote: "清大跟交大就在竹科隔壁一條路！培育了無數半導體晶圓人才！"
+          }
+        ]
+      },
+      {
+        id: "sci_u1_part1",
+        subject: "自然科學",
+        title: "單元一(上)：大氣中的水與水循環",
+        subtitle: "水蒸氣無色透明看不見、雲霧雙胞胎、0℃露霜臨界線、加鹽融冰降溫",
+        badgeColor: "emerald",
+        summary: `
+          <div class="space-y-4">
+            <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs">
+              <h4 class="font-black text-emerald-800 text-sm flex items-center gap-1.5 mb-1.5">
+                <i class="ph-fill ph-drop"></i> 核心一：水蒸氣看不見！三態大搜查
+              </h4>
+              <p class="text-slate-700"><strong>大魔王考點：</strong> <mark class="bg-amber-200 font-bold px-1 rounded">水蒸氣是無色透明的氣體！</mark> 肉眼看到的白色煙霧是「已經凝結成的小水滴」！高空為雲、地面為霧。線香煙塵是為了提供「凝結核」。</p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-cyan-50 border border-cyan-200 text-xs">
+              <h4 class="font-black text-cyan-800 text-sm flex items-center gap-1.5 mb-1.5">
+                <i class="ph-fill ph-snowflake"></i> 核心二：露與霜的「0℃」生死線
+              </h4>
+              <p class="text-slate-700"><strong>露（液態）：</strong> 高於 0℃ 水蒸氣凝結。<strong>霜（固態冰晶）：</strong> 低於或等於 0℃ 水蒸氣直接「凝華」。食鹽能促使冰融化大量吸熱使溫度跌破 0℃！</p>
+            </div>
+          </div>
+        `,
+        questions: [
+          {
+            id: 1,
+            type: "tf",
+            stem: "燒開水時，茶壺壺嘴冒出白茫茫的一團煙，那團我們看得到的白色煙霧就是「水蒸氣」。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "經典陷阱中鏢！水蒸氣是『隱形的』無色氣體！你看得到的那是已經凝結成的小水滴啦！"
+          },
+          {
+            id: 2,
+            type: "tf",
+            stem: "雲和霧的本質與形成原因非常相似，主要差別在於：高空中的小水滴或冰晶稱為「雲」，飄浮在地面附近的小水滴則稱為「霧」。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "沒錯！住在平地叫霧，飄在天上叫雲，本質都是小水滴雙胞胎。"
+          },
+          {
+            id: 3,
+            type: "tf",
+            stem: "在做「模擬雲和霧」的實驗時，在錐形瓶中放入點燃的線香，是為了提供「凝結核」，讓水蒸氣更容易附著凝結成小水滴。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "答對了，線香的煙粒就是水滴聚集的骨架，沒有它水滴不知道要在哪集合。"
+          },
+          {
+            id: 4,
+            type: "tf",
+            stem: "露水和霜都是地表物體表面出現的水，形成時的溫度條件都在 0℃ 以下。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "露水如果在0℃以下就結凍成冰塊啦！露水是0℃以上凝結，霜才是0℃以下凝華！"
+          },
+          {
+            id: 5,
+            type: "choice",
+            stem: "大氣中的水會以「固態、液態、氣態」三種形態存在，請問下列哪一組水在大氣中的形態「全部屬於固態」？",
+            options: [
+              "露、霜、雪",
+              "雨、霧、露",
+              "雪、霜、雹",
+              "雲、雨、雹"
+            ],
+            answer: 2,
+            roastNote: "雪、霜、雹摸起來都是冰硬的固體！雨跟露是水滴，雲是水滴加冰晶混合物！"
+          },
+          {
+            id: 6,
+            type: "choice",
+            stem: "在「模擬露和霜」的實驗中，在冰塊中加入食鹽的主要原因是什麼？",
+            options: [
+              "讓冰塊吸收更多陽光產生光合作用",
+              "降低冰的融點，促使冰加速融化吸熱，使杯溫降到 0℃ 以下",
+              "提供水蒸氣附著的凝結核",
+              "讓鋼杯外壁的水更快蒸發成無形氣體"
+            ],
+            answer: 1,
+            roastNote: "加鹽吸熱大降溫！這就是做搖滾冰淇淋也是靠加鹽的原理啊！"
+          },
+          {
+            id: 7,
+            type: "choice",
+            stem: "寒冷清晨在草葉上看到白色的「霜」，是水蒸氣遇冷「直接由氣態跳過液態變成固態」的過程，這在科學上稱為什麼？",
+            options: [
+              "融化",
+              "蒸發",
+              "凝固",
+              "凝華"
+            ],
+            answer: 3,
+            roastNote: "氣體直接變固體叫『凝華』！如果是固體直接變氣體（像乾冰）叫昇華，別搞混囉！"
+          },
+          {
+            id: 8,
+            type: "choice",
+            stem: "關於地球上的「水循環」，下列敘述何者錯誤？",
+            options: [
+              "地表的水透過受熱蒸發進入大氣中",
+              "植物吸水後，能透過葉片的蒸散作用將水蒸氣釋放到大氣",
+              "雲中的小水滴聚集變大變重後掉落，形成雨或雪等降水",
+              "水一旦滲入地下變成深層地下水，就永遠脫離水循環，不可能再回地表"
+            ],
+            answer: 3,
+            roastNote: "地下水哪有那麼自閉！地下水會流入溪流、大海或被植物抽上去，循環永不停歇！"
+          },
+          {
+            id: 9,
+            type: "choice",
+            stem: "【實驗辨析】鋼杯裝冰塊與食鹽，杯外壁凝結出白色小霜晶。請問杯壁外的小水滴與霜到底來自何處？",
+            options: [
+              "杯子裡面的冰水透過鋼杯鐵壁滲透出來的",
+              "杯子周圍空氣中的水蒸氣遇冷冷卻形成的",
+              "食鹽化學反應穿透杯子產生的結晶",
+              "鋼杯本身融化變出來的"
+            ],
+            answer: 1,
+            roastNote: "鋼杯又不是衛生紙，水怎麼可能穿透鐵壁！是空氣中的水蒸氣撞到冰冷杯壁哭出來的小水珠！"
+          },
+          {
+            id: 10,
+            type: "choice",
+            stem: "【環境常識】汽機車與工廠廢氣中，主要含有哪兩種物質是促成「酸雨」的主要元兇？",
+            options: [
+              "硫氧化物 與 氮氧化物",
+              "純水蒸氣 與 二氧化碳",
+              "氧氣 與 氮氣",
+              "臭氧 與 氫氣"
+            ],
+            answer: 0,
+            roastNote: "硫氧化物加氮氧化物，遇水就變成稀硫酸跟稀硝酸，落下來就是酸雨，淋了頭髮要抗議！"
+          }
+        ]
+      },
+      {
+        id: "sci_u1_part2",
+        subject: "自然科學",
+        title: "單元一(下)：天氣圖、鋒面與颱風",
+        subtitle: "高壓H晴/低壓L雨、等壓線疏密、冷鋒三角形/滯留鋒梅雨、颱風眼與防颱",
+        badgeColor: "sky",
+        summary: `
+          <div class="space-y-4">
+            <div class="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs">
+              <h4 class="font-black text-sky-800 text-sm flex items-center gap-1.5 mb-1.5">
+                <i class="ph-fill ph-compass"></i> 核心一：地面天氣圖三大密碼
+              </h4>
+              <p class="text-slate-700"><strong>「H」高氣壓：</strong> 氣流下沉，晴朗好天氣。<strong>「L」低氣壓：</strong> 氣流上升，陰雨天氣。<strong>等壓線越密集 = 風力越強！</strong></p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs">
+              <h4 class="font-black text-indigo-800 text-sm flex items-center gap-1.5 mb-1.5">
+                <i class="ph-fill ph-wind"></i> 核心二：鋒面與颱風
+              </h4>
+              <p class="text-slate-700">滯留鋒造成5、6月梅雨季；颱風強度是依據<strong>「近中心最大風速」</strong>劃分；颱風眼無風無雨。防颱查詢打 166 或 167。</p>
+            </div>
+          </div>
+        `,
+        questions: [
+          {
+            id: 1,
+            type: "tf",
+            stem: "在地面天氣圖上標示「H」代表高氣壓中心，通常會帶來陰雨的天氣；標示「L」代表低氣壓中心，通常會帶來晴朗的天氣。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "倒反天罡！H是High高氣壓（晴天），L是Low低氣壓（雨天），連這個都顛倒小花妳是在外星球看天氣嗎？"
+          },
+          {
+            id: 2,
+            type: "tf",
+            stem: "地面天氣圖上的冷鋒符號以藍色「三角形」表示，且三角形尖端所指的方向，就是冷鋒移動的方向。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "沒錯！藍色三角形箭頭指哪，冷氣團就往哪衝過去！"
+          },
+          {
+            id: 3,
+            type: "tf",
+            stem: "當颱風中心經過某地上空時，正好處於「颱風眼」籠罩區，此時當地的天氣通常是無雲、無雨、風力微弱的平靜狀態。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "颱風眼就像暴風的核心休息室，無風無雨，但眼牆一來立刻狂風暴雨！"
+          },
+          {
+            id: 4,
+            type: "tf",
+            stem: "臺灣冬季受到大陸冷氣團影響，溫暖的「黑潮」海流勢力會全面籠罩臺灣西部海域，使沿海氣溫大幅回升。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "冬天南下的是冷颼颼的『中國沿岸流』！黑潮冬天主要在東部外海，西部被冷水霸佔啦！"
+          },
+          {
+            id: 5,
+            type: "choice",
+            stem: "臺灣每年五、六月常常會出現陰雨綿綿好幾週的「梅雨季節」，主要是受到哪一種鋒面在臺灣附近停滯徘徊所造成的？",
+            options: [
+              "冷鋒",
+              "暖鋒",
+              "滯留鋒",
+              "颱風鋒"
+            ],
+            answer: 2,
+            roastNote: "冷氣團跟暖氣團在臺灣上空拔河僵持不下，就叫做『滯留鋒』，內褲曬不乾就是它害的！"
+          },
+          {
+            id: 6,
+            type: "choice",
+            stem: "在地面天氣圖上，當我們發現某個區域的「等壓線非常密集（線跟線擠在一起）」時，代表當地的天氣狀況如何？",
+            options: [
+              "氣壓差很大，風勢會相當強勁",
+              "代表一定會下大雪",
+              "空氣完全靜止無風",
+              "氣溫會在五秒鐘內升高十度"
+            ],
+            answer: 0,
+            roastNote: "等壓線擠得像沙丁魚，代表氣壓差距很大，風力就像開了強效電風扇一樣強！"
+          },
+          {
+            id: 7,
+            type: "choice",
+            stem: "中央氣象署對於「颱風強度」的分級（輕度、中度、強烈颱風），主要是根據下列哪一項數據指標來劃分的？",
+            options: [
+              "24小時降雨量的多寡",
+              "颱風暴風半徑的直徑大小",
+              "颱風近中心的最大風速",
+              "颱風在太平洋上停留的天數"
+            ],
+            answer: 2,
+            roastNote: "看『近中心最大風速』！就算暴風圈再大，風速不夠強也不能叫強烈颱風！"
+          },
+          {
+            id: 8,
+            type: "choice",
+            stem: "颱風雖然常帶來豪雨和風災，但它對臺灣的生活環境也具有哪一項無可取代的「重要好處」？",
+            options: [
+              "讓山坡地更容易過度開墾",
+              "帶來豐沛雨量，增加水庫蓄水量，抒解旱象",
+              "促使海水倒灌以滋潤地下泥土",
+              "吹倒老化路樹以美化城市街景"
+            ],
+            answer: 1,
+            roastNote: "臺灣夏天要是完全沒有颱風送雨水，冬天大家就要準備提水桶排隊洗澡啦！"
+          },
+          {
+            id: 9,
+            type: "choice",
+            stem: "想用語音查詢中央氣象署最新的颱風警報與天氣動態，應該撥打哪支專線電話？",
+            options: [
+              "撥打 166 或 167",
+              "撥打 119 或 110",
+              "撥打 1950 或 165",
+              "撥打 1999"
+            ],
+            answer: 0,
+            roastNote: "氣象查詢是 166 或 167！不要打 119 佔用救護專線，也不要打 165 去問詐騙啦！"
+          },
+          {
+            id: 10,
+            type: "choice",
+            stem: "當北方的大陸冷氣團強勢往南推進，推著暖氣團後退，形成的鋒面名稱以及通過臺灣後的氣溫變化為何？",
+            options: [
+              "冷鋒；氣溫明顯下降轉冷",
+              "暖鋒；氣溫大幅上升變熱",
+              "滯留鋒；氣溫維持三十度高溫",
+              "冷鋒；氣溫反而暴增五度"
+            ],
+            answer: 0,
+            roastNote: "冷鋒過境冷空氣直接灌頂，外套羽絨衣都要拿出來，怎麼可能變熱！"
+          }
+        ]
+      },
+      {
+        id: "sci_u2",
+        subject: "自然科學",
+        title: "單元二：物質受熱後的變化與熱的傳播",
+        subtitle: "熱脹冷縮本質是粒子間距、傳導/對流/輻射、保溫瓶三大防線大解密",
+        badgeColor: "amber",
+        summary: `
+          <div class="space-y-4">
+            <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs">
+              <h4 class="font-black text-amber-800 text-sm flex items-center gap-1.5 mb-1.5">
+                <i class="ph-fill ph-fire"></i> 核心一：熱脹冷縮粒子間距變化
+              </h4>
+              <p class="text-slate-700"><strong>粒子本身沒有變大！</strong> 是受熱時「粒子間的距離拉大」！膨脹劇烈程度：<strong>氣體 ＞ 液體 ＞ 固體</strong>。</p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-slate-100 border border-slate-200 text-xs">
+              <h4 class="font-black text-slate-800 text-sm flex items-center gap-1.5 mb-1.5">
+                <i class="ph-fill ph-coffee"></i> 核心二：保溫瓶三大防線
+              </h4>
+              <p class="text-slate-700">① 雙層真空層阻擋「傳導與對流」；② 鍍銀光滑內膽反射「熱輻射」；③ 塑膠瓶蓋阻擋「熱傳導與熱對流」。</p>
+            </div>
+          </div>
+        `,
+        questions: [
+          {
+            id: 1,
+            type: "tf",
+            stem: "物體受熱膨脹時，是因為物質內部的「粒子本身變大」；遇冷收縮時，則是「粒子本身縮小」。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "抓到了！原子粒子本身根本沒有伸縮彈簧！是『粒子跟粒子之間的距離』變遠變近而已！"
+          },
+          {
+            id: 2,
+            type: "tf",
+            stem: "太陽與地球之間隔著幾乎沒有空氣的外太空，但太陽的熱仍能傳到地球，這種不需要任何物質當作媒介的傳熱方式稱為「輻射」。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "太棒了！太空中空無一物，只有輻射能自由穿梭在宇宙中送熱量！"
+          },
+          {
+            id: 3,
+            type: "tf",
+            stem: "在房間裡安裝冷氣機時，通常會安裝在室內較高的地方，這是利用冷空氣受冷體積縮小、密度變大而向下流動的「熱對流」特性。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 0,
+            roastNote: "冷空氣下沉、熱空氣上升！冷氣裝在高處才能吹拂整個房間循環對流！"
+          },
+          {
+            id: 4,
+            type: "tf",
+            stem: "保溫瓶的夾層抽成「真空」，主要是為了阻擋熱的「輻射」傳播。",
+            options: ["O（正確）", "X（錯誤）"],
+            answer: 1,
+            roastNote: "大錯特錯！太空中也是真空，太陽輻射照樣穿透！真空是阻擋需要介質的『傳導』和『對流』啦！"
+          },
+          {
+            id: 5,
+            type: "choice",
+            stem: "進行「銅球與銅環」實驗時，加熱後的銅球膨脹卡住穿不過銅環。若現在想讓加熱後的銅球重新穿過銅環，下列哪一個方法最正確？",
+            options: [
+              "將銅環泡入冰水中急速冷卻",
+              "將銅球泡入冷水中冷卻收縮",
+              "繼續用火猛烈加熱銅球",
+              "把整組器材放在大太陽底下曝曬"
+            ],
+            answer: 1,
+            roastNote: "把銅球泡冷水縮小就穿過去了！如果把銅環泡冰水，銅環洞孔縮得更小，銅球更卡死！"
+          },
+          {
+            id: 6,
+            type: "choice",
+            stem: "在「氣體熱對流」實驗中，一瓶是裝滿白煙的冷空氣瓶，另一瓶是透明熱空氣瓶。下列哪種上下擺放方式會讓煙霧產生快速上下劇烈循環對流？",
+            options: [
+              "把「冷空氣瓶」放在上方，「熱空氣瓶」放在下方",
+              "把「熱空氣瓶」放在上方，「冷空氣瓶」放在下方",
+              "兩只瓶子都平躺在桌面上擺放",
+              "無論怎麼擺放，氣體永遠都不會產生對流"
+            ],
+            answer: 0,
+            roastNote: "冷的上沉、熱的下浮！所以『冷的在上面、熱的在下面』才會互相打轉對流！"
+          },
+          {
+            id: 7,
+            type: "choice",
+            stem: "固體、液體和氣體受熱時都有熱脹冷縮現象，請問這三種狀態中，哪一種受熱時「粒子間距離拉開最多，膨脹最劇烈明顯」？",
+            options: [
+              "固體（例如銅球）",
+              "液體（例如紅墨水）",
+              "氣體（例如氣球裡的空氣）",
+              "三種狀態的膨脹程度完全相同"
+            ],
+            answer: 2,
+            roastNote: "氣體分子最自由散漫，受熱就嗨到處亂跑，所以氣體熱脹冷縮最誇張！"
+          },
+          {
+            id: 8,
+            type: "choice",
+            stem: "炒菜鍋通常鍋身用金屬鐵鋁製作，而手把通常用耐熱塑膠或木頭製作，手把使用非金屬材質的最主要科學原因是什麼？",
+            options: [
+              "塑膠與木材是熱的不良導體（熱傳導極慢），端拿時手不易被燙傷",
+              "為了阻擋太陽的紫外線熱輻射",
+              "為了讓炒菜時產生更強烈的空氣熱對流",
+              "單純只是為了外型可愛，跟熱學沒有任何關係"
+            ],
+            answer: 0,
+            roastNote: "如果把手也用鐵做，握上去妳的小手就變成現烤鐵板燒了！不良導體是防燙護身符！"
+          },
+          {
+            id: 9,
+            type: "choice",
+            stem: "【生活智慧】密封很緊的鐵蓋玻璃罐打不開，利用熱脹冷縮原理，下列哪個處理方式最容易旋開？",
+            options: [
+              "將瓶蓋部分浸泡在熱水中或淋熱水，使鐵蓋膨脹縫隙變大",
+              "把整個罐頭丟進冷凍庫冰凍一整晚",
+              "用打火機猛烈烘烤玻璃罐底座",
+              "用力將罐頭往地上摔"
+            ],
+            answer: 0,
+            roastNote: "淋熱水鐵蓋遇熱膨脹，跟玻璃瓶口分開就鬆掉了！丟冷凍庫只會讓鐵蓋縮更緊咬死玻璃！"
+          },
+          {
+            id: 10,
+            type: "choice",
+            stem: "【保溫瓶解析】保溫瓶能防止熱量散失，其中「內部光滑的鍍銀鏡面內膽」，主要目的是用來阻擋哪一種傳熱方式？",
+            options: [
+              "熱傳導",
+              "熱對流",
+              "熱輻射",
+              "熱擴散"
+            ],
+            answer: 2,
+            roastNote: "光滑鏡面反射熱輻射！真空層阻擋傳導對流，瓶蓋堵住洞口！"
+          }
+        ]
+      }
+    ];
+
+    /* =========================================================================
+     * 2. WITTY / SARCASTIC SCORING ROAST TIER GENERATOR
+     * ========================================================================= */
+    const ROAST_TIERS = {
+      perfect: [
+        "太扯了小花！妳老實招來，是不是考試前偷偷把課本泡進珍珠奶茶裡一口氣喝掉了？全校老師都在瑟瑟發抖！",
+        "100分！這根本是學神降臨！快拿去給爸爸媽媽看，這不趁機敲竹槓要一杯特大杯星冰樂簡直對不起妳的大腦！",
+        "滿分通關！連出題老師精心挖的深坑妳都能空中翻筋斗跳過去，小花妳已經進化成答題終結者了！"
+      ],
+      high: [
+        "表現不錯喔小花！有達到學霸水準！但那題被扣分的小坑妳還是踩下去了，出題老師在暗處壞笑妳感覺到了嗎？快看解析！",
+        "80~90分很頂！但剩下那幾分是被家裡的貓叼走了嗎？把錯題看懂，下次就直接登基滿分寶座了！",
+        "表現非常穩健！差一點點就全封頂了，看來最近有認真開機運作，繼續保持這個氣勢把國中題目也給踩在腳下！"
+      ],
+      pass: [
+        "小花同學，妳剛剛讀重點摘要的時候，腦袋裡是不是在循環播放洗腦神曲？這分數在危險邊緣瘋狂試探啊！",
+        "及格邊緣大鵬展翅！再多錯一題平板就要進冷宮了喔！快去把紅字解析大聲朗讀三次給自己醒醒腦！",
+        "低空掠過！雖然沒翻車但底盤已經擦出火花了！妳的實力絕對不止這樣，現在回去重看筆記再測一次！"
+      ],
+      fail: [
+        "嗶嗶嗶！防空警報大響！小花妳剛才是閉著眼睛用腳趾頭在螢幕上盲點嗎？這分數連課本看了都要落淚！",
+        "史詩級翻車現場！這分數簡直是給重點筆記的一記迴旋踢！平板先沒收5分鐘，去喝口水冷靜一下立刻回來重練！",
+        "太狠了小花，出題老師看到這成績都快被妳氣笑了！罰妳現在立刻把單元重點重新啃一遍，不准偷看電視！"
+      ]
+    };
+
+    /* =========================================================================
+     * 3. SOUND EFFECTS ENGINE (Web Audio API)
+     * ========================================================================= */
+    class SoundEngine {
+      constructor() {
+        this.enabled = true;
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+      }
+
+      playTone(freq, type, duration, delay = 0) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        setTimeout(() => {
+          try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+          } catch (e) {}
+        }, delay);
+      }
+
+      playSuccess() {
+        this.playTone(523.25, 'triangle', 0.15, 0);
+        this.playTone(659.25, 'triangle', 0.15, 100);
+        this.playTone(783.99, 'triangle', 0.2, 200);
+        this.playTone(1046.50, 'triangle', 0.35, 300);
+      }
+
+      playCorrect() {
+        this.playTone(587.33, 'sine', 0.08, 0);
+        this.playTone(880.00, 'sine', 0.18, 80);
+      }
+
+      playWrong() {
+        this.playTone(260.00, 'sawtooth', 0.18, 0);
+        this.playTone(190.00, 'sawtooth', 0.3, 120);
+      }
+
+      playTap() {
+        this.playTone(420, 'sine', 0.04, 0);
+      }
+    }
+
+    /* =========================================================================
+     * 4. CONFETTI ANIMATION
+     * ========================================================================= */
+    class ConfettiManager {
+      constructor() {
+        this.canvas = document.getElementById('confettiCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.animationId = null;
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+      }
+
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      }
+
+      burst() {
+        this.particles = [];
+        const colors = ['#f43f5e', '#fb7185', '#eab308', '#22c55e', '#0ea5e9', '#a855f7'];
+        for (let i = 0; i < 90; i++) {
+          this.particles.push({
+            x: this.canvas.width / 2,
+            y: this.canvas.height / 2,
+            vx: (Math.random() - 0.5) * 18,
+            vy: (Math.random() - 0.7) * 18,
+            size: Math.random() * 6 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            vRot: (Math.random() - 0.5) * 12,
+            alpha: 1,
+            gravity: 0.3
+          });
+        }
+        if (!this.animationId) {
+          this.animate();
+        }
+      }
+
+      animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        let active = false;
+
+        for (let p of this.particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.rotation += p.vRot;
+          p.alpha -= 0.01;
+
+          if (p.alpha > 0) {
+            active = true;
+            this.ctx.save();
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate((p.rotation * Math.PI) / 180);
+            this.ctx.fillStyle = p.color;
+            this.ctx.globalAlpha = Math.max(0, p.alpha);
+            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            this.ctx.restore();
+          }
+        }
+
+        if (active) {
+          this.animationId = requestAnimationFrame(() => this.animate());
+        } else {
+          cancelAnimationFrame(this.animationId);
+          this.animationId = null;
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+      }
+    }
+
+    /* =========================================================================
+     * 5. CORE APP CONTROLLER
+     * ========================================================================= */
+    class AppController {
+      constructor() {
+        this.sound = new SoundEngine();
+        this.confetti = new ConfettiManager();
+        this.units = this.loadUnits();
+        this.history = this.loadHistory();
+        this.currentFilter = 'all';
+        this.fontSizes = ['normal', 'large', 'xlarge'];
+        this.fontIndex = parseInt(localStorage.getItem('hua_font_index') || '1', 10); // default Large
+
+        this.currentUnit = null;
+        this.currentExamQuestions = [];
+        this.currentQIndex = 0;
+        this.userAnswers = {};
+        this.isMistakesMode = false;
+
+        this.applyFontSize();
+        this.init();
+      }
+
+      cycleFontSize() {
+        this.fontIndex = (this.fontIndex + 1) % this.fontSizes.length;
+        localStorage.setItem('hua_font_index', this.fontIndex);
+        this.applyFontSize();
+        this.sound.playTap();
+      }
+
+      applyFontSize() {
+        const root = document.documentElement;
+        root.classList.remove('font-normal', 'font-large', 'font-xlarge');
+        const currentSize = this.fontSizes[this.fontIndex];
+        root.classList.add(`font-${currentSize}`);
+
+        const label = document.getElementById('fontScaleLabel');
+        if (label) {
+          if (currentSize === 'normal') label.textContent = '字體：標準';
+          else if (currentSize === 'large') label.textContent = '字體：大';
+          else label.textContent = '字體：特大';
+        }
+      }
+
+      init() {
+        this.renderStats();
+        this.renderUnits();
+        this.updateSoundUI();
+      }
+
+      loadUnits() {
+        try {
+          const raw = localStorage.getItem('hua_units_data_v2');
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return [...DEFAULT_UNITS];
+      }
+
+      saveUnits() {
+        localStorage.setItem('hua_units_data_v2', JSON.stringify(this.units));
+      }
+
+      loadHistory() {
+        try {
+          const raw = localStorage.getItem('hua_history_data_v2');
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return [];
+      }
+
+      saveHistoryRecord(record) {
+        this.history.unshift(record);
+        if (this.history.length > 50) this.history.pop();
+        localStorage.setItem('hua_history_data_v2', JSON.stringify(this.history));
+        this.renderStats();
+      }
+
+      navigate(viewId) {
+        const views = ['home', 'reading', 'exam', 'result'];
+        views.forEach(v => {
+          const el = document.getElementById(`view-${v}`);
+          if (el) el.classList.add('hidden');
+        });
+        const target = document.getElementById(`view-${viewId}`);
+        if (target) {
+          target.classList.remove('hidden');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+
+      toggleSound() {
+        this.sound.enabled = !this.sound.enabled;
+        this.updateSoundUI();
+        if (this.sound.enabled) this.sound.playTap();
+      }
+
+      updateSoundUI() {
+        const icon = document.getElementById('soundIcon');
+        const label = document.getElementById('soundLabel');
+        if (this.sound.enabled) {
+          icon.className = 'ph-fill ph-speaker-high text-base text-emerald-600';
+          label.textContent = '音效：開';
+        } else {
+          icon.className = 'ph-fill ph-speaker-slash text-base text-slate-400';
+          label.textContent = '音效：關';
+        }
+      }
+
+      renderStats() {
+        const totalExams = this.history.length;
+        document.getElementById('statTotalExams').textContent = totalExams;
+
+        if (totalExams > 0) {
+          const totalScore = this.history.reduce((acc, h) => acc + h.score, 0);
+          const avg = Math.round(totalScore / totalExams);
+          document.getElementById('statAvgScore').textContent = `${avg}分`;
+        } else {
+          document.getElementById('statAvgScore').textContent = '--';
+        }
+
+        const mistakes = this.getAllMistakes();
+        document.getElementById('statMistakeCount').textContent = mistakes.length;
+        document.getElementById('mistakeBadgeCount').textContent = mistakes.length;
+        
+        const mistakeBtn = document.getElementById('practiceMistakesBtn');
+        if (mistakes.length === 0) {
+          mistakeBtn.setAttribute('disabled', 'true');
+        } else {
+          mistakeBtn.removeAttribute('disabled');
+        }
+      }
+
+      getAllMistakes() {
+        const mistakeMap = new Map();
+        for (let rec of this.history) {
+          if (rec.mistakes && Array.isArray(rec.mistakes)) {
+            for (let m of rec.mistakes) {
+              const key = `${m.unitId}_${m.question.id}`;
+              if (!mistakeMap.has(key)) {
+                mistakeMap.set(key, { ...m });
+              }
+            }
+          }
+        }
+        return Array.from(mistakeMap.values());
+      }
+
+      setSubjectFilter(subject) {
+        this.currentFilter = subject;
+        document.querySelectorAll('#subjectFilters button').forEach(btn => {
+          btn.classList.remove('bg-slate-800', 'text-white', 'shadow-xs');
+          btn.classList.add('bg-white', 'text-slate-600', 'hover:bg-slate-100');
+        });
+        event.currentTarget.classList.remove('bg-white', 'text-slate-600', 'hover:bg-slate-100');
+        event.currentTarget.classList.add('bg-slate-800', 'text-white', 'shadow-xs');
+        this.renderUnits();
+        this.sound.playTap();
+      }
+
+      renderUnits() {
+        const container = document.getElementById('unitsContainer');
+        container.innerHTML = '';
+
+        const filtered = this.units.filter(u => {
+          if (this.currentFilter === 'all') return true;
+          return u.subject === this.currentFilter;
+        });
+
+        filtered.forEach(unit => {
+          const unitHistory = this.history.filter(h => h.unitId === unit.id);
+          const highestScore = unitHistory.length ? Math.max(...unitHistory.map(h => h.score)) : null;
+          const examTimes = unitHistory.length;
+
+          let badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
+          let icon = 'ph-globe-hemisphere-east';
+          if (unit.subject === '國語') {
+            badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
+            icon = 'ph-book-open';
+          } else if (unit.subject === '自然科學') {
+            badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            icon = 'ph-flask';
+          }
+
+          const card = document.createElement('div');
+          card.className = "bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group";
+          
+          let scoreBadgeHtml = '';
+          if (highestScore !== null) {
+            let scoreColor = highestScore >= 90 ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : (highestScore >= 60 ? 'text-amber-600 bg-amber-50 border-amber-200' : 'text-rose-600 bg-rose-50 border-rose-200');
+            scoreBadgeHtml = `<span class="px-2 py-0.5 rounded-lg text-[11px] font-black border ${scoreColor}">最高 ${highestScore} 分</span>`;
+          } else {
+            scoreBadgeHtml = `<span class="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-400">未測驗</span>`;
+          }
+
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between gap-1.5 mb-2.5">
+                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs sm:text-sm font-black border ${badgeClass}">
+                  <i class="ph-bold ${icon} text-base"></i> ${unit.subject}
+                </span>
+                <div class="flex items-center gap-2">
+                  ${scoreBadgeHtml}
+                  <span class="text-xs text-slate-400 font-medium">${examTimes} 次</span>
+                </div>
+              </div>
+
+              <h3 class="text-base sm:text-xl font-black text-slate-800 group-hover:text-brand-600 transition tracking-tight line-clamp-1">
+                ${unit.title}
+              </h3>
+              <p class="text-slate-400 text-xs sm:text-sm mt-1.5 line-clamp-2 leading-relaxed">
+                ${unit.subtitle || '包含單元重點梳理、高頻觀念辨析及10道評量題目。'}
+              </p>
+            </div>
+
+            <div class="pt-4 mt-3.5 border-t border-slate-100 grid grid-cols-2 gap-2.5">
+              <button onclick="app.openReading('${unit.id}')" class="py-3 px-3 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center gap-1.5 transition touch-card">
+                <i class="ph-bold ph-book-open text-base"></i> 閱讀重點
+              </button>
+              <button onclick="app.startExam('${unit.id}')" class="py-3 px-3 rounded-xl font-black text-xs sm:text-sm bg-brand-500 hover:bg-brand-600 text-white flex items-center justify-center gap-1.5 shadow-sm shadow-brand-500/20 transition active:scale-95 touch-card">
+                <i class="ph-bold ph-pencil-simple-line text-base"></i> 開始作答
+              </button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      openReading(unitId) {
+        const unit = this.units.find(u => u.id === unitId);
+        if (!unit) return;
+        this.currentUnit = unit;
+        this.sound.playTap();
+
+        document.getElementById('readingSubjectTag').textContent = unit.subject;
+        document.getElementById('readingUnitIdTag').textContent = unit.id;
+        document.getElementById('readingUnitTitle').textContent = unit.title;
+        document.getElementById('readingUnitSubtitle').textContent = unit.subtitle || '考前5分鐘極速重點吸收！';
+        
+        let summaryHtml = '';
+        if (Array.isArray(unit.summary)) {
+          summaryHtml = `
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+              <ul class="list-disc pl-4 space-y-1.5 text-slate-700">
+                ${unit.summary.map(s => `<li>${s}</li>`).join('')}
+              </ul>
+            </div>`;
+        } else {
+          summaryHtml = unit.summary;
+        }
+        document.getElementById('readingContentBody').innerHTML = summaryHtml;
+
+        this.navigate('reading');
+      }
+
+      startExamFromReading() {
+        if (!this.currentUnit) return;
+        this.startExam(this.currentUnit.id);
+      }
+
+      startExam(unitId) {
+        const unit = this.units.find(u => u.id === unitId);
+        if (!unit) return;
+        this.currentUnit = unit;
+        this.isMistakesMode = false;
+        this.currentExamQuestions = JSON.parse(JSON.stringify(unit.questions));
+        this.currentQIndex = 0;
+        this.userAnswers = {};
+
+        this.sound.playTap();
+        this.setupExamUI();
+        this.navigate('exam');
+      }
+
+      openMistakesPractice() {
+        const mistakes = this.getAllMistakes();
+        if (mistakes.length === 0) return;
+
+        this.sound.playTap();
+        this.isMistakesMode = true;
+        this.currentUnit = {
+          id: 'mistake_practice',
+          title: '小花專屬錯題特訓營',
+          subject: '錯題殲滅'
+        };
+
+        const shuffled = [...mistakes].sort(() => 0.5 - Math.random()).slice(0, 10);
+        this.currentExamQuestions = shuffled.map(m => m.question);
+        this.currentQIndex = 0;
+        this.userAnswers = {};
+
+        this.setupExamUI();
+        this.navigate('exam');
+      }
+
+      setupExamUI() {
+        document.getElementById('examUnitTitle').textContent = this.currentUnit.title;
+        document.getElementById('examTypeBadge').textContent = this.isMistakesMode ? '錯題特訓' : '單元進度測驗';
+        document.getElementById('totalQuestionsNum').textContent = this.currentExamQuestions.length;
+
+        const dotsNav = document.getElementById('questionDotsNav');
+        dotsNav.innerHTML = '';
+        this.currentExamQuestions.forEach((_, idx) => {
+          const dot = document.createElement('button');
+          dot.className = `w-6 h-6 rounded-full text-xs font-black transition flex items-center justify-center ${idx === 0 ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`;
+          dot.textContent = idx + 1;
+          dot.onclick = () => this.jumpToQuestion(idx);
+          dot.id = `qDot-${idx}`;
+          dotsNav.appendChild(dot);
+        });
+
+        this.renderCurrentQuestion();
+      }
+
+      jumpToQuestion(idx) {
+        if (idx < 0 || idx >= this.currentExamQuestions.length) return;
+        this.currentQIndex = idx;
+        this.sound.playTap();
+        this.renderCurrentQuestion();
+      }
+
+      prevQuestion() {
+        if (this.currentQIndex > 0) this.jumpToQuestion(this.currentQIndex - 1);
+      }
+
+      nextQuestion() {
+        if (this.currentQIndex < this.currentExamQuestions.length - 1) this.jumpToQuestion(this.currentQIndex + 1);
+      }
+
+      renderCurrentQuestion() {
+        const q = this.currentExamQuestions[this.currentQIndex];
+        const total = this.currentExamQuestions.length;
+
+        document.getElementById('currentQuestionNum').textContent = this.currentQIndex + 1;
+        const progressPct = ((this.currentQIndex + 1) / total) * 100;
+        document.getElementById('examProgressBar').style.width = `${progressPct}%`;
+
+        for (let i = 0; i < total; i++) {
+          const dot = document.getElementById(`qDot-${i}`);
+          if (dot) {
+            const hasAnswer = this.userAnswers[i] !== undefined;
+            if (i === this.currentQIndex) {
+              dot.className = "w-6 h-6 rounded-full text-xs font-black bg-brand-500 text-white shadow-xs";
+            } else if (hasAnswer) {
+              dot.className = "w-6 h-6 rounded-full text-xs font-black bg-emerald-100 text-emerald-800";
+            } else {
+              dot.className = "w-6 h-6 rounded-full text-xs font-black bg-slate-100 text-slate-500 hover:bg-slate-200";
+            }
+          }
+        }
+
+        const stemText = q.stem || q.question;
+        document.getElementById('qStem').textContent = `${this.currentQIndex + 1}. ${stemText}`;
+        const typeBadge = document.getElementById('qTypeBadge');
+
+        const isTF = (q.type === 'tf' || q.type === 'ox');
+        if (isTF) {
+          typeBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black bg-purple-100 text-purple-700';
+          typeBadge.innerHTML = '<i class="ph-bold ph-check-fat"></i> 是非題';
+        } else {
+          typeBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black bg-blue-100 text-blue-700';
+          typeBadge.innerHTML = '<i class="ph-bold ph-list-numbers"></i> 選擇題';
+        }
+
+        const container = document.getElementById('qAnswerContainer');
+        container.innerHTML = '';
+
+        if (isTF) {
+          this.renderTFOptions(q, container);
+        } else {
+          this.renderChoiceOptions(q, container);
+        }
+
+        document.getElementById('prevQBtn').disabled = this.currentQIndex === 0;
+        const nextBtn = document.getElementById('nextQBtn');
+        const submitBtn = document.getElementById('submitExamBtn');
+
+        if (this.currentQIndex === total - 1) {
+          nextBtn.classList.add('hidden');
+          submitBtn.classList.remove('hidden');
+        } else {
+          nextBtn.classList.remove('hidden');
+          submitBtn.classList.add('hidden');
+        }
+      }
+
+      renderTFOptions(q, container) {
+        const wrap = document.createElement('div');
+        wrap.className = 'grid grid-cols-2 gap-4 max-w-md mx-auto';
+
+        const labels = [
+          { text: 'O  正確', val: (q.options ? q.options[0] : 0), icon: 'ph-check-circle', color: 'emerald' },
+          { text: 'X  錯誤', val: (q.options ? q.options[1] : 1), icon: 'ph-x-circle', color: 'rose' }
+        ];
+
+        labels.forEach(btnInfo => {
+          const isSelected = (this.userAnswers[this.currentQIndex] === btnInfo.val || this.userAnswers[this.currentQIndex] === (btnInfo.color === 'emerald' ? 'O' : 'X') || this.userAnswers[this.currentQIndex] === (btnInfo.color === 'emerald' ? 0 : 1));
+          const btn = document.createElement('button');
+          btn.className = `p-6 sm:p-8 rounded-2xl font-black text-xl sm:text-2xl flex flex-col items-center justify-center gap-2 border-2 transition-all transform active:scale-95 touch-card ${
+            isSelected 
+              ? `bg-${btnInfo.color}-500 text-white border-${btnInfo.color}-600 shadow-md shadow-${btnInfo.color}-500/20 scale-[1.02]`
+              : `bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100`
+          }`;
+          btn.innerHTML = `<i class="ph-bold ${btnInfo.icon} text-4xl mb-1"></i> ${btnInfo.text}`;
+          btn.onclick = () => {
+            this.userAnswers[this.currentQIndex] = btnInfo.val;
+            this.sound.playTap();
+            this.renderCurrentQuestion();
+          };
+          wrap.appendChild(btn);
+        });
+        container.appendChild(wrap);
+      }
+
+      renderChoiceOptions(q, container) {
+        const wrap = document.createElement('div');
+        wrap.className = 'space-y-3 sm:space-y-3.5';
+        const letters = ['A', 'B', 'C', 'D'];
+
+        q.options.forEach((optText, optIdx) => {
+          const isSelected = (this.userAnswers[this.currentQIndex] === optIdx || this.userAnswers[this.currentQIndex] === optText);
+          const optCard = document.createElement('button');
+          optCard.className = `w-full text-left p-4 sm:p-5 rounded-2xl border-2 font-bold text-sm sm:text-base flex items-center gap-3 transition-all transform active:scale-[0.99] touch-card ${
+            isSelected 
+              ? 'bg-rose-50 text-rose-800 border-brand-500 shadow-xs'
+              : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+          }`;
+          optCard.innerHTML = `
+            <span class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl flex items-center justify-center font-display font-black text-sm sm:text-base ${
+              isSelected ? 'bg-brand-500 text-white' : 'bg-slate-200 text-slate-600'
+            }">${letters[optIdx]}</span>
+            <span class="flex-1 leading-snug">${optText}</span>
+          `;
+          optCard.onclick = () => {
+            this.userAnswers[this.currentQIndex] = optIdx;
+            this.sound.playTap();
+            this.renderCurrentQuestion();
+          };
+          wrap.appendChild(optCard);
+        });
+        container.appendChild(wrap);
+      }
+
+      submitExamModal() {
+        const total = this.currentExamQuestions.length;
+        const answeredCount = Object.keys(this.userAnswers).length;
+        const unanswered = total - answeredCount;
+
+        const modal = document.getElementById('confirmModal');
+        const title = document.getElementById('confirmTitle');
+        const msg = document.getElementById('confirmMessage');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        const okBtn = document.getElementById('confirmOkBtn');
+
+        if (unanswered > 0) {
+          title.textContent = '小花同學，妳有題目漏寫喔！';
+          msg.textContent = `還有 ${unanswered} 題尚未作答！確定要現在交卷直接認賠嗎？建議回去把它們按完！`;
+          okBtn.textContent = '不管了，交卷！';
+        } else {
+          title.textContent = '確定交卷！準備結算？';
+          msg.textContent = '答案都填妥了，按下確定後，系統將立刻給出毒舌評分與專屬講評！';
+          okBtn.textContent = '查看我的實力！';
+        }
+
+        modal.classList.remove('hidden');
+
+        cancelBtn.onclick = () => modal.classList.add('hidden');
+        okBtn.onclick = () => {
+          modal.classList.add('hidden');
+          this.gradeExam();
+        };
+      }
+
+      confirmExitExam() {
+        const modal = document.getElementById('confirmModal');
+        const title = document.getElementById('confirmTitle');
+        const msg = document.getElementById('confirmMessage');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        const okBtn = document.getElementById('confirmOkBtn');
+
+        title.textContent = '確定要中途逃跑？';
+        msg.textContent = '本次作答紀錄將不會被保存喔！小花妳該不會被題目嚇跑了吧？';
+        cancelBtn.textContent = '留下來繼續戰';
+        okBtn.textContent = '離開回首頁';
+
+        modal.classList.remove('hidden');
+
+        cancelBtn.onclick = () => modal.classList.add('hidden');
+        okBtn.onclick = () => {
+          modal.classList.add('hidden');
+          this.navigate('home');
+        };
+      }
+
+      gradeExam() {
+        let correctCount = 0;
+        const totalQuestions = this.currentExamQuestions.length;
+        const breakdown = [];
+        const currentMistakes = [];
+
+        this.currentExamQuestions.forEach((q, idx) => {
+          const userAns = this.userAnswers[idx];
+          let isCorrect = false;
+
+          const isTF = (q.type === 'tf' || q.type === 'ox');
+          if (isTF) {
+            if (typeof q.answer === 'string') {
+              const uStr = (userAns === 0 || userAns === 'O' || userAns === 'O（正確）') ? 'O' : 'X';
+              isCorrect = (uStr === q.answer.trim().toUpperCase());
+            } else {
+              const uNum = (userAns === 'O' || userAns === 'O（正確）' || userAns === 0) ? 0 : 1;
+              isCorrect = (uNum === q.answer);
+            }
+          } else {
+            if (typeof q.answer === 'number') {
+              isCorrect = (userAns === q.answer);
+            } else if (typeof q.answer === 'string') {
+              const selectedText = q.options[userAns];
+              isCorrect = (selectedText === q.answer || userAns === q.answer);
+            }
+          }
+
+          if (isCorrect) {
+            correctCount++;
+          } else {
+            currentMistakes.push({
+              unitId: this.currentUnit.id,
+              unitTitle: this.currentUnit.title,
+              question: q,
+              userAns: userAns
+            });
+          }
+
+          breakdown.push({
+            question: q,
+            userAns: userAns,
+            isCorrect: isCorrect
+          });
+        });
+
+        const score = Math.round((correctCount / totalQuestions) * 100);
+
+        if (score === 100) {
+          this.sound.playSuccess();
+          this.confetti.burst();
+        } else if (score >= 60) {
+          this.sound.playCorrect();
+        } else {
+          this.sound.playWrong();
+        }
+
+        let quote = '';
+        if (score === 100) {
+          quote = ROAST_TIERS.perfect[Math.floor(Math.random() * ROAST_TIERS.perfect.length)];
+        } else if (score >= 80) {
+          quote = ROAST_TIERS.high[Math.floor(Math.random() * ROAST_TIERS.high.length)];
+        } else if (score >= 60) {
+          quote = ROAST_TIERS.pass[Math.floor(Math.random() * ROAST_TIERS.pass.length)];
+        } else {
+          quote = ROAST_TIERS.fail[Math.floor(Math.random() * ROAST_TIERS.fail.length)];
+        }
+
+        const record = {
+          id: Date.now(),
+          date: new Date().toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          unitId: this.currentUnit.id,
+          unitTitle: this.currentUnit.title,
+          score: score,
+          correctCount: correctCount,
+          total: totalQuestions,
+          mistakes: currentMistakes
+        };
+        this.saveHistoryRecord(record);
+
+        this.renderResultView(score, quote, correctCount, totalQuestions, breakdown);
+        this.navigate('result');
+      }
+
+      renderResultView(score, quote, correctCount, totalQuestions, breakdown) {
+        document.getElementById('finalScoreVal').textContent = score;
+        document.getElementById('roastComment').textContent = quote;
+        document.getElementById('correctCountNum').textContent = correctCount;
+
+        const gradePill = document.getElementById('resultGradePill');
+        if (score === 100) {
+          gradePill.className = 'inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 border border-amber-300';
+          gradePill.innerHTML = '👑 學神降臨 • 滿分通關';
+        } else if (score >= 80) {
+          gradePill.className = 'inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300';
+          gradePill.innerHTML = '🌟 高分良品 • 表現穩健';
+        } else if (score >= 60) {
+          gradePill.className = 'inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-800 border border-orange-300';
+          gradePill.innerHTML = '⚡ 壓線及格 • 稍微危險';
+        } else {
+          gradePill.className = 'inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse';
+          gradePill.innerHTML = '🚨 警報大響 • 翻車重練';
+        }
+
+        const list = document.getElementById('detailedResultList');
+        list.innerHTML = '';
+
+        breakdown.forEach((item, idx) => {
+          const q = item.question;
+          const card = document.createElement('div');
+          card.className = `p-3.5 sm:p-5 rounded-2xl border transition shadow-xs ${
+            item.isCorrect ? 'bg-emerald-50/60 border-emerald-200' : 'bg-rose-50/70 border-rose-200'
+          }`;
+
+          const statusBadge = item.isCorrect 
+            ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="ph-bold ph-check-circle text-sm"></i> 答對</span>'
+            : '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black bg-rose-100 text-rose-800 border border-rose-300"><i class="ph-bold ph-x-circle text-sm"></i> 踩坑失分</span>';
+
+          const isTF = (q.type === 'tf' || q.type === 'ox');
+          
+          // Format User's Answer Text
+          let userAnsText = '未作答（空白）';
+          if (item.userAns !== undefined) {
+            if (isTF) {
+              userAnsText = (item.userAns === 0 || item.userAns === 'O' || item.userAns === 'O（正確）') ? 'O（正確）' : 'X（錯誤）';
+            } else {
+              userAnsText = typeof item.userAns === 'number' ? q.options[item.userAns] : item.userAns;
+            }
+          }
+
+          // Format Correct Answer Text
+          let correctAnsText = '';
+          if (isTF) {
+            correctAnsText = (q.answer === 0 || q.answer === 'O') ? 'O（正確）' : 'X（錯誤）';
+          } else {
+            correctAnsText = typeof q.answer === 'number' ? q.options[q.answer] : q.answer;
+          }
+
+          const roast = q.roastNote || q.explanation || '注意觀念理解，別再死記硬背囉！';
+          const stemText = q.stem || q.question;
+
+          // Answer comparison block
+          let comparisonHtml = '';
+          if (item.isCorrect) {
+            comparisonHtml = `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2.5">
+                <div class="p-3 sm:p-4 rounded-xl bg-white/90 border border-emerald-200 text-xs sm:text-sm">
+                  <div class="flex items-center gap-1 text-xs font-black text-emerald-700 mb-1">
+                    <i class="ph-bold ph-check text-base"></i> 妳的選擇與標準答案完全一致：
+                  </div>
+                  <div class="font-bold text-slate-800 text-sm sm:text-base">${correctAnsText}</div>
+                </div>
+              </div>
+            `;
+          } else {
+            comparisonHtml = `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2.5">
+                <!-- User wrong selection -->
+                <div class="p-3 sm:p-4 rounded-xl bg-white/90 border-2 border-rose-300 text-xs sm:text-sm">
+                  <div class="flex items-center justify-between text-xs font-black text-rose-600 mb-1.5">
+                    <span class="flex items-center gap-1"><i class="ph-bold ph-x text-base"></i> 小花當時選了：</span>
+                    <span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded font-bold">踩雷答案</span>
+                  </div>
+                  <div class="font-black text-rose-900 text-sm sm:text-base">${userAnsText}</div>
+                </div>
+
+                <!-- Correct selection -->
+                <div class="p-3 sm:p-4 rounded-xl bg-white/90 border-2 border-emerald-400 text-xs sm:text-sm">
+                  <div class="flex items-center justify-between text-xs font-black text-emerald-700 mb-1.5">
+                    <span class="flex items-center gap-1"><i class="ph-bold ph-check text-base"></i> 正確答案應該是：</span>
+                    <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">標準解答</span>
+                  </div>
+                  <div class="font-black text-emerald-900 text-sm sm:text-base">${correctAnsText}</div>
+                </div>
+              </div>
+            `;
+          }
+
+          // Error breakdown card
+          const explanationCard = `
+            <div class="mt-3 p-3.5 sm:p-4 rounded-xl bg-white/90 border border-slate-200/90 text-xs sm:text-sm space-y-2">
+              <div class="flex items-start gap-2">
+                <span class="shrink-0 p-1.5 rounded-lg ${item.isCorrect ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'} font-bold">
+                  <i class="ph-fill ph-lightbulb text-base"></i>
+                </span>
+                <div class="space-y-1 w-full">
+                  <div class="font-black text-slate-800 flex items-center justify-between text-xs sm:text-sm">
+                    <span>${item.isCorrect ? '🎯 觀念提點與出題破梗：' : '💥 盲點拆解：為什麼會被騙？'}</span>
+                  </div>
+                  <p class="text-slate-600 leading-relaxed font-medium text-xs sm:text-sm">
+                    ${roast}
+                  </p>
+                </div>
+              </div>
+            </div>
+          `;
+
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-3 mb-2.5">
+              <div class="font-black text-slate-800 text-sm sm:text-base leading-snug">
+                <span class="text-slate-400 font-display">Q${idx + 1}.</span> ${stemText}
+              </div>
+              <div class="shrink-0">${statusBadge}</div>
+            </div>
+            
+            ${comparisonHtml}
+            ${explanationCard}
+          `;
+          list.appendChild(card);
+        });
+      }
+
+      retakeCurrentUnit() {
+        if (!this.currentUnit) return;
+        this.startExam(this.currentUnit.id);
+      }
+
+      openHistoryModal() {
+        this.sound.playTap();
+        document.getElementById('historyModal').classList.remove('hidden');
+        this.switchHistoryTab('timeline');
+      }
+
+      closeHistoryModal() {
+        document.getElementById('historyModal').classList.add('hidden');
+      }
+
+      switchHistoryTab(tab) {
+        const timeBtn = document.getElementById('tabTimelineBtn');
+        const misBtn = document.getElementById('tabMistakesBtn');
+        const body = document.getElementById('historyModalBody');
+
+        const mistakes = this.getAllMistakes();
+        document.getElementById('historyTimelineCount').textContent = this.history.length;
+        document.getElementById('historyMistakesCount').textContent = mistakes.length;
+
+        if (tab === 'timeline') {
+          timeBtn.className = "py-2.5 px-3 font-bold text-xs text-brand-600 border-b-2 border-brand-500";
+          misBtn.className = "py-2.5 px-3 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent";
+          
+          if (this.history.length === 0) {
+            body.innerHTML = `
+              <div class="text-center py-8 text-slate-400 space-y-1">
+                <i class="ph-bold ph-ghost text-3xl"></i>
+                <p class="text-xs">尚無任何測驗紀錄，小花還沒開始衝刺喔！</p>
+              </div>`;
+            return;
+          }
+
+          body.innerHTML = '';
+          this.history.forEach(rec => {
+            const item = document.createElement('div');
+            item.className = "p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2";
+            let scoreColor = rec.score >= 90 ? 'text-emerald-600' : (rec.score >= 60 ? 'text-amber-600' : 'text-rose-600');
+            item.innerHTML = `
+              <div>
+                <div class="text-[10px] text-slate-400 font-bold">${rec.date}</div>
+                <div class="font-black text-slate-800 text-xs sm:text-sm">${rec.unitTitle}</div>
+                <div class="text-[10px] text-slate-500">答對 ${rec.correctCount} / ${rec.total} 題</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-black font-display ${scoreColor}">${rec.score}<span class="text-[10px] font-sans text-slate-400 font-normal">分</span></div>
+              </div>
+            `;
+            body.appendChild(item);
+          });
+
+        } else {
+          misBtn.className = "py-2.5 px-3 font-bold text-xs text-brand-600 border-b-2 border-brand-500";
+          timeBtn.className = "py-2.5 px-3 font-bold text-xs text-slate-500 hover:text-slate-800 border-b-2 border-transparent";
+
+          if (mistakes.length === 0) {
+            body.innerHTML = `
+              <div class="text-center py-8 text-slate-400 space-y-1">
+                <i class="ph-bold ph-smiley text-3xl text-emerald-500"></i>
+                <p class="text-xs">太棒了！目前沒有任何錯題，持續保持學霸狀態！</p>
+              </div>`;
+            return;
+          }
+
+          body.innerHTML = '';
+          mistakes.forEach(m => {
+            const q = m.question;
+            const stemText = q.stem || q.question;
+            const isTF = (q.type === 'tf' || q.type === 'ox');
+            
+            let userAnsText = '未作答';
+            if (m.userAns !== undefined) {
+              if (isTF) {
+                userAnsText = (m.userAns === 0 || m.userAns === 'O' || m.userAns === 'O（正確）') ? 'O（正確）' : 'X（錯誤）';
+              } else {
+                userAnsText = typeof m.userAns === 'number' ? q.options[m.userAns] : m.userAns;
+              }
+            }
+
+            let correctAnsText = '';
+            if (isTF) {
+              correctAnsText = (q.answer === 0 || q.answer === 'O') ? 'O（正確）' : 'X（錯誤）';
+            } else {
+              correctAnsText = typeof q.answer === 'number' ? q.options[q.answer] : q.answer;
+            }
+
+            const item = document.createElement('div');
+            item.className = "p-3.5 rounded-2xl bg-rose-50/80 border border-rose-200 space-y-2 text-xs shadow-xs";
+            item.innerHTML = `
+              <div class="flex items-center justify-between text-[11px] text-rose-700 font-black">
+                <span>單元：${m.unitTitle}</span>
+                <span class="bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200">複習卡</span>
+              </div>
+              <div class="font-black text-slate-800 leading-snug">${stemText}</div>
+              
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div class="p-2 rounded-lg bg-white border border-rose-200">
+                  <div class="text-rose-500 font-bold mb-0.5">❌ 當時選了：</div>
+                  <div class="font-bold text-slate-800">${userAnsText}</div>
+                </div>
+                <div class="p-2 rounded-lg bg-white border border-emerald-300">
+                  <div class="text-emerald-600 font-bold mb-0.5">✔ 正確解答：</div>
+                  <div class="font-bold text-slate-800">${correctAnsText}</div>
+                </div>
+              </div>
+
+              <div class="p-2.5 bg-white/95 rounded-xl border border-rose-100 text-slate-700 leading-relaxed space-y-1">
+                <div class="font-black text-slate-800 flex items-center gap-1">
+                  <i class="ph-fill ph-lightbulb text-amber-500 text-xs"></i> 為什麼會錯 / 盲點拆解：
+                </div>
+                <div class="text-slate-600 font-medium">${q.roastNote || q.explanation || '注意題目中的易混淆陷阱！'}</div>
+              </div>
+            `;
+            body.appendChild(item);
+          });
+        }
+      }
+
+      clearHistoryData() {
+        if (confirm('確定要清空小花的所有作答歷程與錯題本嗎？')) {
+          this.history = [];
+          localStorage.removeItem('hua_history_data_v2');
+          this.renderStats();
+          this.closeHistoryModal();
+          this.renderUnits();
+        }
+      }
+
+      openAdminModal() {
+        this.sound.playTap();
+        document.getElementById('adminModal').classList.remove('hidden');
+      }
+
+      closeAdminModal() {
+        document.getElementById('adminModal').classList.add('hidden');
+      }
+
+      fillSampleJson() {
+        const sample = {
+          id: `custom_u_${Date.now()}`,
+          subject: "國語",
+          title: "六上第二課：閱讀素養與修辭",
+          summary: ["課文重點一：...", "生字成語辨析：..."],
+          questions: [
+            {
+              id: 1,
+              type: "ox",
+              question: "題目敘述...",
+              options: ["O", "X"],
+              answer: "O",
+              explanation: "風趣破梗解析！"
+            }
+          ]
+        };
+        document.getElementById('importJsonTextarea').value = JSON.stringify(sample, null, 2);
+      }
+
+      saveImportedUnit() {
+        const text = document.getElementById('importJsonTextarea').value.trim();
+        if (!text) {
+          alert('請貼入單元 JSON 代碼！');
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(text);
+          if (!parsed.id || !parsed.title || !parsed.subject || !parsed.questions) {
+            alert('JSON 格式缺少關鍵欄位 (id, title, subject, questions)！');
+            return;
+          }
+          this.units = this.units.filter(u => u.id !== parsed.id);
+          this.units.unshift(parsed);
+          this.saveUnits();
+          this.renderUnits();
+          this.closeAdminModal();
+          alert(`🎉 成功新增/更新單元：「${parsed.title}」！`);
+        } catch (e) {
+          alert('JSON 解析失敗，請檢查格式是否正確！\n' + e.message);
+        }
+      }
+
+      resetToDefaults() {
+        if (confirm('確定要還原為預設5個單元題庫嗎？')) {
+          this.units = [...DEFAULT_UNITS];
+          this.saveUnits();
+          this.renderUnits();
+          this.closeAdminModal();
+          alert('已還原為預設題庫！');
+        }
+      }
+    }
+
+    let app;
+    window.addEventListener('DOMContentLoaded', () => {
+      app = new AppController();
+    });
+  </script>
+</body>
+</html>
